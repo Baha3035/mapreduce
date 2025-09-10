@@ -34,7 +34,7 @@ void find_word_boundary() {
 
         if (is_word_separator(c)) {
             // if we find the separator, next character starts a word
-            start_byte--;
+            start_byte++;
             break;
         }
     }
@@ -44,7 +44,6 @@ void find_word_boundary() {
 }
 
 void count_words_in_chunk() {
-
     input_file = fopen(filename, "r");
     if (!input_file) {
         printf("❌ Mapper %d: Cannot open file %s\n", mapper_id, filename);
@@ -57,16 +56,19 @@ void count_words_in_chunk() {
     int word_count = 0;
     int current_pos = start_byte;
 
-    while(current_pos < end_byte && fscanf(input_file, "%255s", word) == 1) {
-        word_count++;
+    while(fscanf(input_file, "%255s", word) == 1) {
         current_pos = ftell(input_file);
-
+        if (current_pos > end_byte) {
+            break;  // Stop if we've gone past our boundary
+        }
+        word_count++;
         // Convert to lowercase
         for(int i = 0; word[i]; i++) {
             word[i] = tolower(word[i]);
         }
 
-        printf("📝 Mapper %d found word: '%s'\n", mapper_id, word);
+        printf("📝 Mapper %d found word: '%s' at position %d (end_byte: %d)\n", 
+       mapper_id, word, current_pos, end_byte);
     }
     fclose(input_file);
 
