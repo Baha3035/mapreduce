@@ -6,6 +6,47 @@
 int start_byte, end_byte, mapper_id;
 char* filename;
 FILE* input_file;
+int FREQ_ARRAY_SIZE = 1000;
+
+typedef struct {
+    char word[256];
+    int count;
+} WordFreq;
+
+int find_word_in_array(WordFreq* freq_array, int size, char* word) {
+    for(int i = 0; i < size; i++) {
+        if (strcmp(freq_array[i].word, word) == 0) {
+            return i;  // Found it! Return the index
+        }
+    }
+    return -1;  // Not found
+}
+
+// STEP 3: Function to add a new word to our array
+// This gets called when we encounter a word for the first time
+void add_new_word(WordFreq* freq_array, int* size, char* word) {
+    strcpy(freq_array[*size].word, word);  // Copy the word
+    freq_array[*size].count = 1;           // Set initial count
+    (*size)++;                             // Increment size counter
+    printf("✅ Added new word: '%s' at index %d\n", word, *size - 1);
+}
+
+// STEP 4: Function to increment count of existing word
+// This gets called when we see a word we've seen before
+void increment_word_count(WordFreq* freq_array, int index) {
+    freq_array[index].count++;             // Increment the count
+    printf("📈 Incremented '%s' count to %d\n", 
+           freq_array[index].word, freq_array[index].count);
+}
+
+// STEP 5: Function to print our frequency table (for testing)
+void print_frequency_table(WordFreq* freq_array, int size) {
+    printf("\n=== WORD FREQUENCY TABLE ===\n");
+    for (int i = 0; i < size; i++) {
+        printf("%s: %d\n", freq_array[i].word, freq_array[i].count);
+    }
+    printf("=============================\n\n");
+}
 
 int is_word_separator(char c) {
     return (c == ' ' || c == '\t' || c == '\n' || c == ',' ||
@@ -53,7 +94,8 @@ void count_words_in_chunk() {
     fseek(input_file, start_byte, SEEK_SET);
 
     char word[256];
-    int word_count = 0;
+    WordFreq freq_array[FREQ_ARRAY_SIZE];
+    int unique_words = 0; 
     int current_pos = start_byte;
 
     while(fscanf(input_file, "%255s", word) == 1) {
@@ -61,10 +103,17 @@ void count_words_in_chunk() {
         if (current_pos > end_byte) {
             break;  // Stop if we've gone past our boundary
         }
-        word_count++;
+        
         // Convert to lowercase
         for(int i = 0; word[i]; i++) {
             word[i] = tolower(word[i]);
+        }
+
+        int word_index = find_word_in_array(freq_array, unique_words, word);
+        if (word_index != -1) {
+            increment_word_count(freq_array, word_index);
+        } else {
+            add_new_word(freq_array, &unique_words, word);
         }
 
         printf("📝 Mapper %d found word: '%s' at position %d (end_byte: %d)\n", 
@@ -78,11 +127,17 @@ void count_words_in_chunk() {
 
     FILE* output_file = fopen(output_filename, "w");
     if (output_file) {
-        fprintf(output_file, "Mapper %d processed %d words from bytes %d-%d\n", 
-                mapper_id, word_count, start_byte, end_byte);
+        fprintf(output_file, "Mapper %d processed %d unique words from bytes %d-%d\n", 
+                mapper_id, unique_words, start_byte, end_byte);
+
+        for (int i = 0; i < unique_words; i++) {
+            fprintf(output_file, "%s %d\n", freq_array[i].word, freq_array[i].count);
+        }
+        
         printf("Success");
         fclose(output_file);
     }
+    print_frequency_table(freq_array, unique_words);
 }
 
 int main(int argc, char* argv[]) {
