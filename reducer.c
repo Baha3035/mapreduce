@@ -4,11 +4,6 @@
 #define MAX_LINE_SIZE 256
 
 int hash_word_to_reducer(char* word, int num_reducers) {
-    // We need to:
-    // 1. Calculate something from the word
-    // 2. Use % to get a number between 0 and num_reducers-1
-    
-    // What should we calculate from the word?
     int sum = 0;
     for(int i = 0; word[i]; i++) {
         sum += word[i];

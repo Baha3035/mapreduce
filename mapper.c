@@ -22,8 +22,6 @@ int find_word_in_array(WordFreq* freq_array, int size, char* word) {
     return -1;  // Not found
 }
 
-// STEP 3: Function to add a new word to our array
-// This gets called when we encounter a word for the first time
 void add_new_word(WordFreq* freq_array, int* size, char* word) {
     strcpy(freq_array[*size].word, word);  // Copy the word
     freq_array[*size].count = 1;           // Set initial count
@@ -31,15 +29,12 @@ void add_new_word(WordFreq* freq_array, int* size, char* word) {
     printf("✅ Added new word: '%s' at index %d\n", word, *size - 1);
 }
 
-// STEP 4: Function to increment count of existing word
-// This gets called when we see a word we've seen before
 void increment_word_count(WordFreq* freq_array, int index) {
     freq_array[index].count++;             // Increment the count
     printf("📈 Incremented '%s' count to %d\n", 
            freq_array[index].word, freq_array[index].count);
 }
 
-// STEP 5: Function to print our frequency table (for testing)
 void print_frequency_table(WordFreq* freq_array, int size) {
     printf("\n=== WORD FREQUENCY TABLE ===\n");
     for (int i = 0; i < size; i++) {
@@ -95,7 +90,7 @@ void count_words_in_chunk() {
 
     char word[256];
     WordFreq freq_array[FREQ_ARRAY_SIZE];
-    int unique_words = 0; 
+    int unique_words = 0;
     int current_pos = start_byte;
 
     while(fscanf(input_file, "%255s", word) == 1) {
