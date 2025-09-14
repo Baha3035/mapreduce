@@ -3,10 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#define FREQ_ARRAY_SIZE 1000
 int start_byte, end_byte, mapper_id;
 char* filename;
 FILE* input_file;
-int FREQ_ARRAY_SIZE = 1000;
 
 typedef struct {
     char word[256];
