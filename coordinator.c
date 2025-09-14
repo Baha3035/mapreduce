@@ -16,7 +16,7 @@ void spawn_mapper(const char* input_file, int start, int end, int mapper_id) {
     pid_t pid = fork();
 
     if (pid == 0) {
-        // Child process: transform into mapper
+        // Child: become mapper
 
         char start_str[32], end_str[32], id_str[32];
         sprintf(start_str, "%d", start);
@@ -33,6 +33,22 @@ void spawn_mapper(const char* input_file, int start, int end, int mapper_id) {
         exit(1);
     } else if (pid < 0) {
         perror("Fork failed");
+        exit(1);
+    }
+}
+
+void spawn_reducer(int reducer_id, int total_reducers) {
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        // Child: become reducer
+
+        char id_str[32], total_str[32];
+        sprintf(id_str, "%d", reducer_id);
+        sprintf(total_str, "%d", total_reducers);
+
+        execv("./mapper", (char*[]){"./reducer", id_str, total_str, NULL});
+        perror("Failed to exec reducer");
         exit(1);
     }
 }
@@ -74,7 +90,6 @@ int main(int argc, char* argv[]) {
         spawn_mapper(input_file, start, end, i);
     }
 
-    // STEP 4: wait for all mappers to complete
     printf("\n⏳ WAITING FOR MAPPERS TO COMPLETE...\n");
 
     for(int i = 0; i < num_mappers; i++) {
@@ -86,6 +101,21 @@ int main(int argc, char* argv[]) {
         } else {
             printf("❌ Mapper process %d failed\n", finished_pid);
         }
+    }
+
+    printf("\n🔄 STARTING REDUCE PHASE...\n");
+
+    int num_reducers = 3;
+
+    for(int i = 0; i < num_reducers; i++) {
+        spawn_reducer(i, num_reducers);
+    }
+
+    // Wait for all reducers to complete
+    for(int i = 0; i < num_reducers; i++) {
+        int status;
+        wait(&status);
+        printf("Reducer process completed");
     }
     
     printf("\n🎉 ALL MAPPERS COMPLETED!\n");

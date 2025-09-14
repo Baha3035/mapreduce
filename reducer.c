@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_LINE_SIZE 256
 #define FREQ_ARRAY_SIZE 1000
@@ -9,8 +10,6 @@ typedef struct {
     char word[256];
     int count;
 } WordFreq;
-
-WordFreq freq_array[FREQ_ARRAY_SIZE];
 
 int find_word_in_array(WordFreq* freq_array, int size, char* word) {
     for(int i = 0; i < size; i++) {
@@ -60,6 +59,7 @@ void read_mapper_files(char* filename, int reducer_id, int total_reducers) {
     }
 
     char line[MAX_LINE_SIZE];
+    WordFreq freq_array[FREQ_ARRAY_SIZE];
 
     while(fgets(line, sizeof(line), fd) != NULL) {
         if (line[0] == '#') continue;
@@ -90,5 +90,8 @@ void read_mapper_files(char* filename, int reducer_id, int total_reducers) {
 }
 
 int main(int argc, char* argv[]) {
-    
+    int reducer_id = atoi(argv[1]);
+    int total_reducers = atoi(argv[2]);
+
+    // read all the files that have a pattern output_file_*.txt and put them as variables into read_mapper_files()
 }
