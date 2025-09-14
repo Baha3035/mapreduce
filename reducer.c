@@ -27,17 +27,13 @@ void add_new_word(WordFreq* freq_array, int* size, char* word, int count) {
     strcpy(freq_array[*size].word, word);  // Copy the word
     freq_array[*size].count = count;           // Set initial count
     (*size)++;                             // Increment size counter
-    printf("✅ Added new word: '%s' at index %d\n", word, *size - 1);
 }
 
 void increment_word_count(WordFreq* freq_array, int index, int count) {
     freq_array[index].count += count;             // Increment the count
-    printf("📈 Incremented '%s' count to %d\n", 
-           freq_array[index].word, freq_array[index].count);
 }
 
 void print_frequency_table(WordFreq* freq_array, int size) {
-    printf("\n=== WORD FREQUENCY TABLE ===\n");
     for (int i = 0; i < size; i++) {
         printf("%s: %d\n", freq_array[i].word, freq_array[i].count);
     }
@@ -49,8 +45,6 @@ int hash_word_to_reducer(char* word, int num_reducers) {
     for(int i = 0; word[i]; i++) {
         sum += word[i];
     }
-
-    printf("sum %d\n", sum);
     return sum % num_reducers;
 }
 
@@ -73,19 +67,13 @@ void read_mapper_files(WordFreq* freq_array, char* filename, int reducer_id, int
             int word_reducer = hash_word_to_reducer(word, total_reducers);
 
             if (word_reducer == reducer_id) {
-                printf("✅ MINE! word='%s', count=%d\n", word, count);
-
                 int word_index = find_word_in_array(freq_array, unique_words, word);
-
                 if (word_index != -1) {
                     increment_word_count(freq_array, word_index, count);
                 } else {
                     add_new_word(freq_array, &unique_words, word, count);
                 }
-            } else {
-                printf("❌ word='%s' belongs to reducer %d\n", word, word_reducer);
             }
-            printf("Found: word='%s', count=%d\n", word, count);
         }
     }
 
@@ -128,6 +116,5 @@ int main(int argc, char* argv[]) {
         }
         
         fclose(output_file);
-        printf("Results written to %s\n", output_filename);
     }
 }

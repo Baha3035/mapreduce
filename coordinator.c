@@ -17,14 +17,12 @@ void spawn_mapper(const char* input_file, int start, int end, int mapper_id) {
 
     if (pid == 0) {
         // Child: become mapper
-
         char start_str[32], end_str[32], id_str[32];
         sprintf(start_str, "%d", start);
         sprintf(end_str, "%d", end);
         sprintf(id_str, "%d", mapper_id);
 
         char* args[] = {"./mapper", (char*)input_file, start_str, end_str, id_str, NULL};
-        printf("Spawning Mapper %d: bytes %d-%d\n", mapper_id, start, end);
 
         execv("./mapper", args);
 
@@ -62,12 +60,6 @@ int main(int argc, char* argv[]) {
     const char* input_file = argv[1];
     int num_mappers = atoi(argv[2]);
 
-    printf("playing around: %s\n", argv[0]);
-
-    printf("🎬 MAPREDUCE COORDINATOR STARTING\n");
-    printf("📁 Input file: %s\n", input_file);
-    printf("👥 Number of mappers: %d\n", num_mappers);
-
     // Step 1: get file size for work division
     int total_bytes = get_file_size(input_file);
     if (total_bytes < 0) {
@@ -75,22 +67,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    printf("📊 File size: %d bytes\n", total_bytes);
-
     // Step 2: calculate work chunks
     int chunk_size = total_bytes / num_mappers;
-    printf("Chunk size: %d bytes per mapper\n", chunk_size);
 
     // Step 3: spawn all mapper processes
-    printf("Spawning mappers...\n");
     for(int i = 0; i < num_mappers; i++) {
         int start = i * chunk_size;
         int end = i == (num_mappers - 1) ? total_bytes : start + chunk_size;
 
         spawn_mapper(input_file, start, end, i);
-    }
-
-    printf("\n⏳ WAITING FOR MAPPERS TO COMPLETE...\n");
 
     for(int i = 0; i < num_mappers; i++) {
         int status;
@@ -102,8 +87,6 @@ int main(int argc, char* argv[]) {
             printf("❌ Mapper process %d failed\n", finished_pid);
         }
     }
-
-    printf("\n🔄 STARTING REDUCE PHASE...\n");
 
     int num_reducers = 3;
 
@@ -118,8 +101,6 @@ int main(int argc, char* argv[]) {
         printf("Reducer process completed\n");
     }
     
-    printf("\n🎉 ALL MAPPERS COMPLETED!\n");
-    printf("📋 Next: Implement shuffle & reduce phases...\n");
-    
     return 0;
+    }
 }
