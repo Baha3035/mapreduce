@@ -47,7 +47,7 @@ void spawn_reducer(int reducer_id, int total_reducers) {
         sprintf(id_str, "%d", reducer_id);
         sprintf(total_str, "%d", total_reducers);
 
-        execv("./mapper", (char*[]){"./reducer", id_str, total_str, NULL});
+        execv("./reducer", (char*[]){"./reducer", id_str, total_str, NULL});
         perror("Failed to exec reducer");
         exit(1);
     }
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < num_reducers; i++) {
         int status;
         wait(&status);
-        printf("Reducer process completed");
+        printf("Reducer process completed\n");
     }
     
     printf("\n🎉 ALL MAPPERS COMPLETED!\n");

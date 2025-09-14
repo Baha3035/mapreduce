@@ -2,4 +2,5 @@
 mapper
 coordinator
 reducer
+*.o
 lab*

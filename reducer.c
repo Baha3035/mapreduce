@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
+#include <fnmatch.h>
 
 #define MAX_LINE_SIZE 256
 #define FREQ_ARRAY_SIZE 1000
-int unique_words = 0;
 
 typedef struct {
     char word[256];
     int count;
 } WordFreq;
+
+int unique_words = 0;
 
 int find_word_in_array(WordFreq* freq_array, int size, char* word) {
     for(int i = 0; i < size; i++) {
@@ -51,7 +54,7 @@ int hash_word_to_reducer(char* word, int num_reducers) {
     return sum % num_reducers;
 }
 
-void read_mapper_files(char* filename, int reducer_id, int total_reducers) {
+void read_mapper_files(WordFreq* freq_array, char* filename, int reducer_id, int total_reducers) {
     FILE *fd = fopen(filename, "r");
     if (!fd) {
         printf("Error: Cannot open file %s\n", filename);
@@ -59,7 +62,6 @@ void read_mapper_files(char* filename, int reducer_id, int total_reducers) {
     }
 
     char line[MAX_LINE_SIZE];
-    WordFreq freq_array[FREQ_ARRAY_SIZE];
 
     while(fgets(line, sizeof(line), fd) != NULL) {
         if (line[0] == '#') continue;
@@ -86,12 +88,46 @@ void read_mapper_files(char* filename, int reducer_id, int total_reducers) {
             printf("Found: word='%s', count=%d\n", word, count);
         }
     }
+
     fclose(fd);
 }
 
 int main(int argc, char* argv[]) {
     int reducer_id = atoi(argv[1]);
     int total_reducers = atoi(argv[2]);
+    struct dirent *entry;
+    char pattern[] = "output_file_*.txt";
 
-    // read all the files that have a pattern output_file_*.txt and put them as variables into read_mapper_files()
+    WordFreq freq_array[FREQ_ARRAY_SIZE];
+    
+    DIR *dir = opendir(".");
+    if (dir == NULL) {
+        perror("Error opening directory");
+    }
+
+    while((entry = readdir(dir)) != NULL) {
+        if (fnmatch(pattern, entry->d_name, 0) == 0) {
+            printf("%s\n", entry->d_name);
+            read_mapper_files(freq_array, entry->d_name, reducer_id, total_reducers);
+        }
+    }
+
+    closedir(dir);
+
+    // Write final results after processing all files
+    char output_filename[256];
+    sprintf(output_filename, "reducer_output_%d.txt", reducer_id);
+
+    FILE* output_file = fopen(output_filename, "w");
+    if (output_file) {
+        fprintf(output_file, "# Reducer %d: Final word frequencies\n", reducer_id);
+        fprintf(output_file, "# Total unique words: %d\n", unique_words);
+        
+        for (int i = 0; i < unique_words; i++) {
+            fprintf(output_file, "%s %d\n", freq_array[i].word, freq_array[i].count);
+        }
+        
+        fclose(output_file);
+        printf("Results written to %s\n", output_filename);
+    }
 }
